@@ -1,0 +1,11 @@
+{
+  "server": "localhost:5000",
+  "key_word": "thịnh sếu",
+  "output_path": "facebook_comment",
+  "cookie_facebook": "sb=TXXKYqSc0bIArM_Y7s1noVrw; dpr=2.5; datr=TXXKYsqyd0ib951StuK72zTq; c_user=100081734814529; xs=22%3ApHlR49AZXlNsEQ%3A2%3A1657435478%3A-1%3A-1; fr=0LpDpBFdYUu1EKoXH.AWXBC6bvGWQtnuslAoro4aFCMfY.BiynVN.qZ.AAA.0.0.BiynVW.AWXtx-mHTBw; presence=EDvF3EtimeF1657435482EuserFA21B81734814529A2EstateFDutF0CEchF_7bCC; wd=1285x721",
+  "headless": 1,
+  "number_post_id": 100,
+  "number_comment_take": 100000,
+  "delete_old_data": 1,
+  "refresh": 10
+}

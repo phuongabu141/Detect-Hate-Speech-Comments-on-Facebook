@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='js/Chart.js')}}"></script>
+  
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>DashBoard BigData</title>
+        <link 
+            rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+            integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf"
+            crossorigin="anonymous"/>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='styles/styles.css') }}"/>
+    </head>
+
+    <body>
+        <main>
+            <!-- Page Header -->
+            <header width="100%">
+                <!-- Title -->
+                <h2>
+                    <label for=""></label>
+                        Dashboard Hate Speech Detection On Facebook
+                </h2>
+                <!-- Search bar -->
+                <div class="search-wrapper">
+                    <span class="fas fa-search"></span>
+                    <input type="search" placeholder="Search here" />
+                </div>
+                <!-- Account -->
+                <div class="user-wrapper" >
+                    <img
+                        src="{{url_for('static', filename='icon/bigdata.png')}}"
+                        width="40px"
+                        height="40px"
+                        alt="">
+                    </img>
+                    <div style="margin-left: 15px;">
+                        <h4>Nhóm 14</h4>
+                        <small>BigData</small>
+                    </div>
+                </div>
+            </header>
+
+            <!-- DashBoard -->
+            <div class="dashboard-cards" >
+                <!-- Total clean -->
+                <div class="card-single">
+                    <div>
+                        <h1 id="count_clean">{{ count_clean }}</h1>
+                        <span>CLEAN</span>
+                    </div>
+                    <div>
+                        <span  style="padding-right:3px; padding-top: 3px; display:inline-block;">
+                            <img src="{{url_for('static', filename='icon/clean.png')}}" style="width:64px;height:64px;"></img>
+                        </span>
+                    </div>
+                </div>
+                <!-- Total offensive -->
+                <div class="card-single">
+                    <div>
+                        <h1 id="count_offensive">{{ count_offensive }}</h1>
+                        <span>OFFENSIVE</span>
+                    </div>
+                    <div>
+                        <span style="padding-right:3px; padding-top: 3px; display:inline-block;">
+                            <img src="{{url_for('static', filename='icon/offensive.png')}}" style="width:64px;height:64px;"></img>
+                        </span>
+                    </div>
+                </div>
+                <!-- Total hate -->
+                <div class="card-single">
+                    <div>
+                        <h1 id="count_hate">{{ count_hate }}</h1>
+                        <span>HATE</span>
+                    </div>
+                    <div >
+                        <span  style="padding-right:3px; padding-top: 3px; display:inline-block;">
+                            <img src="{{url_for('static', filename='icon/hate.png')}}" style="width:64px;height:64px;"></img>
+                        </span>
+                    </div>
+                </div>
+                <!-- Total users -->
+                <div class="card-single" style="background-color: white;">
+                    <div>
+                        <h1 id="count_user" style="color:#1D2231;">{{ count_user }}</h1>
+                        <span style="color:#AAAAAA;">TOTAL USERS</span>
+                    </div>
+                    <div >
+                        <span  style="padding-right:3px; padding-top: 3px; display:inline-block;">
+                            <img src="{{url_for('static', filename='icon/user.png')}}" style="width:64px;height:64px;"></img>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Charts-->
+            <div class="graphBox">
+                <div class="box">
+                    <canvas id="doughnut_chart"></canvas>
+                </div>
+                <div class="box">
+                    <canvas id="line_chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Add Word Cloud -->
+            <div class="graphBox" style="margin: 0;">
+                <div class="box">
+                    <div id="cloud" style="position: relative; background: #fff; padding: 10px; width: 50%; border-radius: 20px;"></div>
+                </div>
+                <div class="box", style="padding-top: 0px; padding-right: 20px">
+                    <div class="recent-grid">
+                        <div class="project">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Recent User's Comments</h2>
+                                </div>
+                                <div id="table_container" class="card-body">
+                                    <!-- Table in here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Datatable -->
+            <!-- <div class="recent-grid">
+                <div class="project">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Recent User's Comments</h2>
+                        </div>
+                        <div id="table_container" class="card-body">
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </main>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+        <script src="https://cdn.rawgit.com/jasondavies/d3-cloud/v1.2.1/build/d3.layout.cloud.js"></script>
+        <script>
+            const ctx_Doughnut = document.getElementById('doughnut_chart').getContext('2d');
+            const configDoughnutChart = {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        {% for item in labels_doughnut %}
+                            "{{item}}",
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        label: 'Count',
+                        data: [
+                            {% for item in values_doughnut %}
+                            {{item}},
+                            {% endfor %}
+                        ],
+                        backgroundColor: [
+                            'rgba(150, 99, 255, 1)',
+                            'rgba(99, 255, 150, 1)',
+                            'rgba(255, 99, 99, 1)'
+                        ],
+                    }]
+                },
+                options: {
+                    scales: {
+                        
+                    }
+                }
+            };
+
+            const ctx_LineChart = document.getElementById('line_chart').getContext('2d');
+            var data_CleanLineChart = {
+                label: "#Clean",
+                data: [
+                    {% for item in values_line_clean %}
+                        {{item}},
+                    {% endfor %}
+                ],
+                lineTension: 0.4,
+                fill: false,
+                borderColor: 'rgba(127, 255, 99, 1)'
+            };
+
+            var data_OffensiveLineChart = {
+                label: "#Offensive",
+                data: [
+                    {% for item in values_line_offensive %}
+                        {{item}},
+                    {% endfor %}
+                ],
+                lineTension: 0.4,
+                fill: false,
+                borderColor: 'rgba(255, 238, 99, 1)'
+            };
+
+            var data_HateLineChart = {
+                label: "#Hate",
+                data: [
+                    {% for item in values_line_hate %}
+                        {{item}},
+                    {% endfor %}
+                ],
+                lineTension: 0.4,
+                fill: false,
+                borderColor: 'rgba(255, 99, 99, 1)'
+            };
+
+            const config_LineChart = {
+                type: 'line',
+                data: {
+                    labels: [
+                        {% for item in labels_line %}
+                            "{{item}}",
+                        {% endfor %}
+                    ],
+                    datasets: [data_CleanLineChart, data_OffensiveLineChart, data_HateLineChart]
+                },
+                options: {
+                    scales: {
+                        xAxes: [
+                            {
+                                type: 'time',
+                                distribution: 'linear'
+                            }
+                        ],
+                        // y:{
+                        //     title: 
+                        //     {
+                        //         display: true,
+                        //         text: 'Number of comments'
+                        //     }
+                        // },
+                        // x:{
+                        //     title: 
+                        //     {
+                        //         display: true,
+                        //         text: 'Times'
+                        //     }
+                        // },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            };
+            
+            const doughnutChart = new Chart(ctx_Doughnut, configDoughnutChart);
+            const lineChart = new Chart(ctx_LineChart, config_LineChart);
+
+            var src_LabelsDoughnut = [];
+            var src_ValuesDoughnut = [];
+
+            var src_TotalClean = 0;
+            var src_TotalOffensive = 0;
+            var src_TotalHate = 0;
+            var src_TotalUser = 0;
+
+            var src_LabelsLine = [];
+            var src_ValuesLineClean = [];
+            var src_ValuesLineOffensive = [];
+            var src_ValuesLineHate = [];
+            var src_DataTable = '';
+
+            var src_DataWordCloud = [];
+            
+            var fill = d3.scale.category20();
+            d3.layout.cloud()
+                .size([500, 500])
+                .words(src_DataWordCloud)
+                .rotate(function() {
+                    return ~~(Math.random() * 2) * 90;
+                })
+                .font("Impact")
+                .fontSize(function(d) {
+                    return d.size;
+                })
+                .on("end", drawDataWordCloud)
+                .start();
+
+            function drawDataWordCloud(words) {
+                d3.select("#cloud").append("svg")
+                    .attr("width", 500)
+                    .attr("height", 500)
+                    .append("g")
+                    .attr("transform", "translate(250, 250)")
+                    .selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", function(d) {
+                        return d.size + "px";
+                    })
+                    .style("-webkit-touch-callout", "none")
+                    .style("-webkit-user-select", "none")
+                    .style("-khtml-user-select", "none")
+                    .style("-moz-user-select", "none")
+                    .style("-ms-user-select", "none")
+                    .style("user-select", "none")
+                    .style("cursor", "default")
+                    .style("font-family", "Impact")
+                    .style("fill", function(d, i) {
+                        return fill(i);
+                    })
+                    .attr("text-anchor", "middle")
+                    .attr("transform", function(d) {
+                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    })
+                    .text(function(d) {
+                        return d.text;
+                    });
+            };
+            
+            // set the viewbox to content bounding box (zooming in on the content, effectively trimming whitespace)
+            var svg = document.getElementsByTagName("svg")[0];
+            var bbox = svg.getBBox();
+            var viewBox = [bbox.x, bbox.y, bbox.width, bbox.height].join(" ");
+            svg.setAttribute("viewBox", viewBox);
+
+            function wordCloud(selector) {
+                var fill = d3.scale.category20();
+                
+                $(selector).html("");
+                var svg = d3.select(selector).append("svg")
+                .attr("width", 500)
+                    .attr("height", 500)
+                    .append("g")
+                    .attr("transform", "translate(250, 250)");
+                
+                function draw(words) {
+                    var cloud = svg.selectAll("text")
+                                    .data(words, function(d) { return d.text; });
+                    cloud.enter()
+                        .append("text")
+                        .style("font-family", "Impact")
+                        .style("fill", function(d, i) { return fill(i); })
+                        .attr("text-anchor", "middle")
+                        .attr('font-size', 1)
+                        .text(function(d) { return d.text; });
+
+                    cloud.transition()
+                        .duration(3500)
+                        .style("font-size", function(d) { return d.size + "px"; })
+                        .attr("transform", function(d) {
+                            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                        })
+                        .style("fill-opacity", 1);
+
+                    cloud.exit()
+                        .transition()
+                        .duration(3500)
+                        .style('fill-opacity', 1e-6)
+                        .attr('font-size', 1)
+                        .remove();
+                };
+
+                return {
+                    update: function(words) {
+                        d3.layout.cloud().size([500, 500])
+                            .words(words)
+                            .padding(1)
+                            .rotate(function() { return ~~(Math.random() * 2) * 90; })
+                            .font("Impact")
+                            .fontSize(function(d) { return d.size; })
+                            .on("end", draw)
+                            .start();
+                        
+                        var svg = document.getElementsByTagName("svg")[0];
+                        var bbox = svg.getBBox();
+                        var viewBox = [bbox.x, bbox.y, bbox.width, bbox.height].join(" ");
+                        svg.setAttribute("viewBox", viewBox);
+                    }
+                }
+            };
+
+            var svg = document.getElementsByTagName("svg")[0];
+            var bbox = svg.getBBox();
+            var viewBox = [bbox.x, bbox.y, bbox.width, bbox.height].join(" ");
+            svg.setAttribute("viewBox", viewBox);
+
+            var wordCloud1 = wordCloud("#cloud");
+
+
+            // thiết lập để cập nhật lại trang sau 5s
+            setInterval(function(){
+                $.getJSON('/refreshData', {
+                }, function(data) {
+                    // Dữ liệu thống kê
+                    src_TotalClean = data.count_clean;
+                    src_TotalOffensive = data.count_offensive;
+                    src_TotalHate = data.count_hate;
+                    src_TotalUser =  data.count_user;
+                    
+                    // Dữ liệu doughnut chart
+                    src_LabelsDoughnut = data.labels_doughnut;
+                    src_ValuesDoughnut = data.values_doughnut;
+
+                    // Dữ liệu line chart
+                    src_LabelsLine = data.labels_line;
+                    src_ValuesLineClean = data.values_line_clean;
+                    src_ValuesLineOffensive = data.values_line_offensive;
+                    src_ValuesLineHate = data.values_line_hate;
+
+                    // Dữ liệu bảng
+                    src_DataTable = data.data_table;
+
+                    // Dữ liệu word cloud
+                    src_DataWordCloud = JSON.parse(data.data_word_cloud);
+                });
+                
+                // cập nhật lại dữ liệu word cloud
+                wordCloud1.update(src_DataWordCloud);
+                
+                // cập nhật lại các giá trị thống kê
+                document.getElementById("count_clean").innerHTML = src_TotalClean;
+                document.getElementById("count_offensive").innerHTML = src_TotalOffensive;
+                document.getElementById("count_hate").innerHTML = src_TotalHate;
+                document.getElementById("count_user").innerHTML = src_TotalUser;
+                
+                // cập nhật lại doughnut chart
+                doughnutChart.data.labels = src_LabelsDoughnut;
+                doughnutChart.data.datasets[0].data = src_ValuesDoughnut;
+                doughnutChart.update();
+
+                // cập nhật lại line chart
+                lineChart.data.labels = src_LabelsLine;
+                lineChart.data.datasets[0].data = src_ValuesLineClean;
+                lineChart.data.datasets[1].data = src_ValuesLineOffensive;
+                lineChart.data.datasets[2].data = src_ValuesLineHate;
+                lineChart.update()
+                
+                // cập nhật lại bảng dữ liệu
+                document.getElementById("table_container").innerHTML = src_DataTable;
+
+            },5000);
+        </script>
+    </body>
+</html>
